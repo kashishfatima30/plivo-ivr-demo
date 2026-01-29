@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plivo IVR Demo - InspireWorks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 5px;
+        }
+        
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .info-box ul {
+            margin-left: 20px;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .info-box li {
+            margin-bottom: 5px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input[type="tel"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="tel"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .phone-hint {
+            color: #888;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #888;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📞 Plivo IVR Demo</h1>
+        <p class="subtitle">InspireWorks Technical Assignment</p>
+        
+        <div class="info-box">
+            <h3>How It Works:</h3>
+            <ul>
+                <li><strong>Level 1:</strong> Language Selection (English/Spanish)</li>
+                <li><strong>Level 2:</strong> Play Audio or Connect to Associate</li>
+            </ul>
+        </div>
+        
+        <form id="callForm">
+            <div class="form-group">
+                <label for="phoneNumber">Enter Phone Number</label>
+                <input 
+                    type="tel" 
+                    id="phoneNumber" 
+                    name="phoneNumber" 
+                    placeholder="+1234567890" 
+                    required
+                    pattern="^\+?[1-9]\d{1,14}$"
+                >
+                <p class="phone-hint">Format: +[country code][number] (e.g., +12025551234)</p>
+            </div>
+            
+            <button type="submit" id="callButton">
+                🚀 Initiate Call
+            </button>
+        </form>
+        
+        <div id="status" class="status"></div>
+        
+        <div class="footer">
+            Powered by Plivo Voice API
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('callForm');
+        const phoneInput = document.getElementById('phoneNumber');
+        const callButton = document.getElementById('callButton');
+        const statusDiv = document.getElementById('status');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const phoneNumber = phoneInput.value.trim();
+            
+            // Validate phone number
+            if (!phoneNumber.match(/^\+?[1-9]\d{1,14}$/)) {
+                showStatus('error', 'Please enter a valid phone number in E.164 format');
+                return;
+            }
+            
+            // Disable button and show loading
+            callButton.disabled = true;
+            callButton.innerHTML = '<span class="loading"></span> Initiating Call...';
+            showStatus('info', 'Placing call to ' + phoneNumber + '...');
+            
+            try {
+                const response = await fetch('/make-call', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phone_number: phoneNumber
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showStatus('success', 
+                        '✅ Call initiated successfully! Check your phone.\n' +
+                        'Call UUID: ' + data.call_uuid
+                    );
+                    phoneInput.value = '';
+                } else {
+                    showStatus('error', '❌ Error: ' + (data.error || 'Failed to initiate call'));
+                }
+            } catch (error) {
+                showStatus('error', '❌ Network error: ' + error.message);
+            } finally {
+                // Re-enable button
+                callButton.disabled = false;
+                callButton.innerHTML = '🚀 Initiate Call';
+            }
+        });
+        
+        function showStatus(type, message) {
+            statusDiv.className = 'status ' + type;
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>
