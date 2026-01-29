@@ -17,7 +17,7 @@ app = Flask(__name__)
 PLIVO_AUTH_ID = os.getenv('PLIVO_AUTH_ID', 'MANZJJOGRLNZK0ZMZIMM')
 PLIVO_AUTH_TOKEN = os.getenv('PLIVO_AUTH_TOKEN', 'NmU2ZmRhMjYtOTE1OS00YWRiLWJlNmEtNTIxYzUy')
 PLIVO_PHONE_NUMBER = os.getenv('PLIVO_PHONE_NUMBER', '918031274121')
-ASSOCIATE_NUMBER = os.getenv('PLIVO_PHONE_NUMBER', '918031274121')  # Using same number for demo
+ASSOCIATE_NUMBER = os.getenv('ASSOCIATE_NUMBER', '918826389434')  
 
 client = plivo.RestClient(auth_id=PLIVO_AUTH_ID, auth_token=PLIVO_AUTH_TOKEN)
 
@@ -107,6 +107,7 @@ def language_menu():
     """Level 2: Action Menu"""
     digit = request.form.get('Digits', '')
     print(f"\n🔢 Language Menu - Digit: {digit}")
+    print(f"Full request data: {dict(request.form)}")
     
     response = plivoxml.ResponseElement()
     
@@ -140,17 +141,12 @@ def language_menu():
     get_digits = plivoxml.GetDigitsElement(
         action=f'{BASE_URL}/action-menu?language={language}',
         method='POST',
-        timeout=5,
+        timeout=10,
         num_digits=1,
-        retries=1
+        retries=2,
+        redirect=True
     )
     response.add(get_digits)
-    
-    speak_retry = plivoxml.SpeakElement("We did not receive your input.")
-    response.add(speak_retry)
-    
-    redirect = plivoxml.RedirectElement(f'{BASE_URL}/language-menu')
-    response.add(redirect)
     
     xml_output = response.to_string()
     print(f"XML: {xml_output}\n")
@@ -163,11 +159,14 @@ def action_menu():
     digit = request.form.get('Digits', '')
     language = request.args.get('language', 'english')
     
-    print(f"\n🎬 Action Menu - Digit: {digit}, Language: {language}")
+    print(f"\n🎬 Action Menu - Digit: '{digit}', Language: {language}")
+    print(f"Full request data: {dict(request.form)}")
+    print(f"Query params: {dict(request.args)}")
     
     response = plivoxml.ResponseElement()
     
     if digit == '1':
+        print("✅ Option 1 selected - Playing audio message")
         # Play audio message (TTS)
         if language == 'english':
             speak1 = plivoxml.SpeakElement("Playing your audio message now.")
@@ -204,6 +203,7 @@ def action_menu():
         response.add(hangup)
         
     elif digit == '2':
+        print(f"✅ Option 2 selected - Connecting to associate: {ASSOCIATE_NUMBER}")
         # Connect to associate
         if language == 'english':
             speak = plivoxml.SpeakElement(
@@ -226,6 +226,7 @@ def action_menu():
         response.add(speak_end)
         
     else:
+        print(f"❌ Invalid digit received: '{digit}'")
         # Invalid input
         if language == 'english':
             speak = plivoxml.SpeakElement("Invalid selection. Returning to main menu.")
